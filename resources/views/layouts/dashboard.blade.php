@@ -51,6 +51,8 @@
     <!-- Auto Complete CSS -->
     <link rel="stylesheet" href="{{ asset('assets/libs/%40tarekraafat/autocomplete.js/css/autoComplete.css') }}">
 
+    @stack('styles')
+
 </head>
 
 <body>
@@ -401,16 +403,10 @@
 <!-- Date & Time Picker JS -->
 <script src="{{ asset('assets/libs/flatpickr/flatpickr.min.js') }}"></script>
 
-<!-- Apex Charts JS -->
-<script src="{{ asset('assets/libs/apexcharts/apexcharts.min.js') }}"></script>
-
-<!-- Sales Dashboard -->
-<script src="{{ asset('assets/js/sales-dashboard.js') }}"></script>
-
 <!-- Custom JS -->
 <script src="{{ asset('assets/js/custom.js') }}"></script>
 <script src="{{ asset('assets/js/theme.js') }}"></script>
-
+@stack('scripts')
 </body>
 
 </html>
