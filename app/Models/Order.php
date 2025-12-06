@@ -27,7 +27,11 @@ class Order extends Model
     {
         return $this->belongsTo(DiningTable::class, 'dining_table_id');
     }
-
+    public function table()
+    {
+        // 2. parametre olarak 'dining_table_id' veriyoruz çünkü fonksiyon adımız 'table'
+        return $this->belongsTo(DiningTable::class, 'dining_table_id');
+    }
     // Siparişin içindeki ürünlere ulaşmak için (İleride lazım olur)
     public function items()
     {

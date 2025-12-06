@@ -9,17 +9,41 @@ class OrderItem extends Model
 {
     use HasFactory;
 
-    // Korumayı kaldırıyoruz (Tüm sütunlara veri yazılabilir)
-    protected $guarded = [];
+    protected $table = 'order_items';
 
-    // İLİŞKİLER (Opsiyonel ama faydalı)
-    public function order()
-    {
-        return $this->belongsTo(Order::class);
-    }
+    protected $fillable = [
+        'order_id',
+        'product_id',
+        'quantity',
+        'unit_price',
+        'sub_total',
+        'status',
+        'note'
+    ];
 
+    /**
+     * Bu sipariş kalemi hangi ürüne ait?
+     */
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Bu sipariş kaleminin varyasyonları (Örn: Büyük Boy, Acılı)
+     * Veritabanı tablosu: order_item_variations
+     * Foreign Key: order_item_id
+     */
+    public function variations()
+    {
+        return $this->hasMany(OrderItemVariation::class, 'order_item_id');
+    }
+
+    /**
+     * Hangi siparişe ait?
+     */
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
     }
 }

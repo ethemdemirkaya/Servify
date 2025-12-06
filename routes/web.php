@@ -39,7 +39,18 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('ingredients', \App\Http\Controllers\IngredientController::class);
 
+    Route::resource('product-recipes', \App\Http\Controllers\ProductRecipeController::class);
 
+    Route::resource('inventory/transactions', \App\Http\Controllers\InventoryTransactionController::class)
+        ->names([
+            'index' => 'inventory.transactions.index',
+            'store' => 'inventory.transactions.store',
+            'destroy' => 'inventory.transactions.destroy',
+            // update ve edit metodlarını kullanmadık ama resource hepsini oluşturur.
+        ]);
+    Route::get('/orders/kitchen', [App\Http\Controllers\KitchenController::class, 'index'])->name('orders.kitchen');
+    Route::post('/orders/kitchen/{id}/status', [App\Http\Controllers\KitchenController::class, 'updateStatus'])->name('orders.kitchen.update');
+    Route::post('/orders/kitchen/item/{id}', [App\Http\Controllers\KitchenController::class, 'updateItemStatus'])->name('orders.kitchen.item.update');
 
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
