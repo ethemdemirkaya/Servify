@@ -1,6 +1,14 @@
 <?php
 
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DiningTableController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PosController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
@@ -13,6 +21,30 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/pos/get-order/{tableId}', [App\Http\Controllers\PosController::class, 'getTableOrder'])->name('pos.get-order');
+    Route::get('/pos', [PosController::class, 'index'])->name('pos.index');
+    Route::post('/pos/order', [PosController::class, 'store'])->name('pos.store');
+    Route::resource('users', UserController::class);
+    Route::get('/orders/active', [OrderController::class, 'active'])->name('orders.active');
+
+    Route::resource('tables', DiningTableController::class);
+    Route::resource('reservations', ReservationController::class);
+    Route::get('/reservations/check-availability/{tableId}', [ReservationController::class, 'getAvailability'])->name('reservations.check');
+
+    Route::resource('products', ProductController::class);
+
+    Route::resource('categories', CategoryController::class);
+
+    Route::resource('variations', \App\Http\Controllers\ProductVariationController::class);
+
+    Route::resource('ingredients', \App\Http\Controllers\IngredientController::class);
+
+
+
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

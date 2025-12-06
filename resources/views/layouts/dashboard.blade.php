@@ -202,17 +202,22 @@
     <!-- /app-header -->
     <!-- Start::app-sidebar -->
     <!-- Start::app-sidebar -->
+    <!-- Start::app-sidebar -->
     <aside class="app-sidebar sticky" id="sidebar">
 
         <!-- Header -->
         <div class="main-sidebar-header">
             <a href="/" class="header-logo">
-                <img src="../assets/images/brand-logos/desktop-logo.png" alt="logo" class="desktop-logo">
-                <img src="../assets/images/brand-logos/toggle-logo.png" alt="logo" class="toggle-logo">
-                <img src="../assets/images/brand-logos/desktop-dark.png" alt="logo" class="desktop-dark">
-                <img src="../assets/images/brand-logos/toggle-dark.png" alt="logo" class="toggle-dark">
+                <img src="{{ asset('assets/images/brand-logos/desktop-logo.png') }}" alt="logo" class="desktop-logo">
+                <img src="{{ asset('assets/images/brand-logos/toggle-logo.png') }}" alt="logo" class="toggle-logo">
+                <img src="{{ asset('assets/images/brand-logos/desktop-dark.png') }}" alt="logo" class="desktop-dark">
+                <img src="{{ asset('assets/images/brand-logos/toggle-dark.png') }}" alt="logo" class="toggle-dark">
             </a>
         </div>
+
+        @php
+            $role = auth()->user()->role;
+        @endphp
 
         <div class="main-sidebar" id="sidebar-scroll">
             <nav class="main-menu-container nav nav-pills flex-column sub-open">
@@ -225,121 +230,184 @@
                     <li class="slide__category"><span class="category-name">Genel Bakış</span></li>
 
                     <li class="slide">
-                        <a href="/dashboard" class="side-menu__item">
+                        <a href="/dashboard" class="side-menu__item {{ request()->is('dashboard') ? 'active' : '' }}">
                             <i class="side-menu__icon ti ti-smart-home"></i>
                             <span class="side-menu__label">Dashboard</span>
                         </a>
                     </li>
 
-                    <li class="slide">
-                        <a href="/pos" class="side-menu__item">
-                            <i class="side-menu__icon ti ti-device-desktop-analytics"></i>
-                            <span class="side-menu__label">POS Sistemi</span>
-                        </a>
-                    </li>
+                    <!-- POS Sistemi -->
+                    @if(in_array($role, ['admin', 'waiter', 'cashier']))
+                        <li class="slide">
+                            <a href="/pos" class="side-menu__item {{ request()->is('pos') ? 'active' : '' }}">
+                                <i class="side-menu__icon ti ti-device-desktop-analytics"></i>
+                                <span class="side-menu__label">POS Sistemi</span>
+                            </a>
+                        </li>
+                    @endif
 
                     <!-- Kategori: Operasyon -->
                     <li class="slide__category"><span class="category-name">Operasyon</span></li>
 
-                    <li class="slide has-sub">
-                        <a href="javascript:void(0);" class="side-menu__item">
+                    <!-- SİPARİŞLER (Parent: orders/*) -->
+                    <li class="slide has-sub {{ request()->is('orders*') ? 'active open' : '' }}">
+                        <a href="javascript:void(0);" class="side-menu__item {{ request()->is('orders*') ? 'active' : '' }}">
                             <i class="side-menu__icon ti ti-receipt-2"></i>
                             <span class="side-menu__label">Siparişler</span>
                             <i class="ri-arrow-right-s-line side-menu__angle"></i>
                         </a>
                         <ul class="slide-menu child1">
-                            <li class="slide"><a href="/orders/active" class="side-menu__item">Aktif Siparişler</a></li>
-                            <li class="slide"><a href="/orders/kitchen" class="side-menu__item">Mutfak Ekranı</a></li>
-                            <li class="slide"><a href="/orders/history" class="side-menu__item">Sipariş Geçmişi</a></li>
+                            @if(in_array($role, ['admin', 'waiter', 'cashier']))
+                                <li class="slide">
+                                    <a href="/orders/active" class="side-menu__item {{ request()->is('orders/active') ? 'active' : '' }}">Aktif Siparişler</a>
+                                </li>
+                            @endif
+
+                            @if(in_array($role, ['admin', 'chef']))
+                                <li class="slide">
+                                    <a href="/orders/kitchen" class="side-menu__item {{ request()->is('orders/kitchen') ? 'active' : '' }}">Mutfak Ekranı</a>
+                                </li>
+                            @endif
+
+                            @if(in_array($role, ['admin', 'cashier']))
+                                <li class="slide">
+                                    <a href="/orders/history" class="side-menu__item {{ request()->is('orders/history') ? 'active' : '' }}">Sipariş Geçmişi</a>
+                                </li>
+                            @endif
                         </ul>
                     </li>
 
-                    <li class="slide has-sub">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="side-menu__icon ti ti-armchair"></i>
-                            <span class="side-menu__label">Salon & Rezervasyon</span>
-                            <i class="ri-arrow-right-s-line side-menu__angle"></i>
-                        </a>
-                        <ul class="slide-menu child1">
-                            <li class="slide"><a href="/tables" class="side-menu__item">Masa Düzeni</a></li>
-                            <li class="slide"><a href="/reservations" class="side-menu__item">Rezervasyonlar</a></li>
-                        </ul>
-                    </li>
+                    <!-- SALON & REZERVASYON (Parent: tables* veya reservations*) -->
+                    @if(in_array($role, ['admin', 'waiter']))
+                        <li class="slide has-sub {{ request()->is('tables*', 'reservations*') ? 'active open' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item {{ request()->is('tables*', 'reservations*') ? 'active' : '' }}">
+                                <i class="side-menu__icon ti ti-armchair"></i>
+                                <span class="side-menu__label">Salon & Rezervasyon</span>
+                                <i class="ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                                <li class="slide">
+                                    <a href="/tables" class="side-menu__item {{ request()->is('tables*') ? 'active' : '' }}">Masa Düzeni</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="/reservations" class="side-menu__item {{ request()->is('reservations*') ? 'active' : '' }}">Rezervasyonlar</a>
+                                </li>
+                            </ul>
+                        </li>
+                    @endif
 
-                    <!-- Kategori: Menü -->
-                    <li class="slide__category"><span class="category-name">Menü & Ürünler</span></li>
+                    <!-- Kategori: Menü & Ürünler -->
+                    @if($role === 'admin')
+                        <li class="slide__category"><span class="category-name">Menü & Ürünler</span></li>
 
-                    <li class="slide has-sub">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="side-menu__icon ti ti-tools-kitchen-2"></i>
-                            <span class="side-menu__label">Ürün Yönetimi</span>
-                            <i class="ri-arrow-right-s-line side-menu__angle"></i>
-                        </a>
-                        <ul class="slide-menu child1">
-                            <li class="slide"><a href="/products" class="side-menu__item">Ürün Listesi</a></li>
-                            <li class="slide"><a href="/categories" class="side-menu__item">Kategoriler</a></li>
-                            <li class="slide"><a href="/variations" class="side-menu__item">Varyasyonlar</a></li>
-                        </ul>
-                    </li>
+                        <!-- ÜRÜN YÖNETİMİ (Parent: products*, categories*, variations*) -->
+                        <li class="slide has-sub {{ request()->is('products*', 'categories*', 'variations*') ? 'active open' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item {{ request()->is('products*', 'categories*', 'variations*') ? 'active' : '' }}">
+                                <i class="side-menu__icon ti ti-tools-kitchen-2"></i>
+                                <span class="side-menu__label">Ürün Yönetimi</span>
+                                <i class="ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                                <li class="slide">
+                                    <a href="/products" class="side-menu__item {{ request()->is('products*') ? 'active' : '' }}">Ürün Listesi</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="/categories" class="side-menu__item {{ request()->is('categories*') ? 'active' : '' }}">Kategoriler</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="/variations" class="side-menu__item {{ request()->is('variations*') ? 'active' : '' }}">Varyasyonlar</a>
+                                </li>
+                            </ul>
+                        </li>
+                    @endif
 
                     <!-- Kategori: Envanter -->
-                    <li class="slide__category"><span class="category-name">Stok Takibi</span></li>
+                    @if(in_array($role, ['admin', 'chef']))
+                        <li class="slide__category"><span class="category-name">Stok Takibi</span></li>
 
-                    <li class="slide has-sub">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="side-menu__icon ti ti-package"></i>
-                            <span class="side-menu__label">Envanter</span>
-                            <i class="ri-arrow-right-s-line side-menu__angle"></i>
-                        </a>
-                        <ul class="slide-menu child1">
-                            <li class="slide"><a href="/ingredients" class="side-menu__item">Malzemeler</a></li>
-                            <li class="slide"><a href="/inventory/transactions" class="side-menu__item">Stok Hareketleri</a></li>
-                            <li class="slide"><a href="/product-recipes" class="side-menu__item">Reçeteler</a></li>
-                        </ul>
-                    </li>
+                        <!-- ENVANTER (Parent: ingredients*, product-recipes*, inventory*) -->
+                        <li class="slide has-sub {{ request()->is('ingredients*', 'product-recipes*', 'inventory*') ? 'active open' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item {{ request()->is('ingredients*', 'product-recipes*', 'inventory*') ? 'active' : '' }}">
+                                <i class="side-menu__icon ti ti-package"></i>
+                                <span class="side-menu__label">Envanter</span>
+                                <i class="ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                                <li class="slide">
+                                    <a href="/ingredients" class="side-menu__item {{ request()->is('ingredients*') ? 'active' : '' }}">Malzemeler</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="/product-recipes" class="side-menu__item {{ request()->is('product-recipes*') ? 'active' : '' }}">Reçeteler</a>
+                                </li>
+                                @if($role === 'admin')
+                                    <li class="slide">
+                                        <a href="/inventory/transactions" class="side-menu__item {{ request()->is('inventory*') ? 'active' : '' }}">Stok Hareketleri</a>
+                                    </li>
+                                @endif
+                            </ul>
+                        </li>
+                    @endif
 
                     <!-- Kategori: Finans -->
-                    <li class="slide__category"><span class="category-name">Finans & İK</span></li>
+                    @if(in_array($role, ['admin', 'cashier']))
+                        <li class="slide__category"><span class="category-name">Finans & İK</span></li>
 
-                    <li class="slide has-sub">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="side-menu__icon ti ti-wallet"></i>
-                            <span class="side-menu__label">Finansal Yönetim</span>
-                            <i class="ri-arrow-right-s-line side-menu__angle"></i>
-                        </a>
-                        <ul class="slide-menu child1">
-                            <li class="slide"><a href="/expenses" class="side-menu__item">Giderler</a></li>
-                            <li class="slide"><a href="/shifts" class="side-menu__item">Kasa Vardiyaları</a></li>
-                            <li class="slide"><a href="/payments" class="side-menu__item">Ödemeler</a></li>
-                        </ul>
-                    </li>
+                        <!-- FİNANSAL YÖNETİM (Parent: expenses*, shifts*, payments*) -->
+                        <li class="slide has-sub {{ request()->is('expenses*', 'shifts*', 'payments*') ? 'active open' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item {{ request()->is('expenses*', 'shifts*', 'payments*') ? 'active' : '' }}">
+                                <i class="side-menu__icon ti ti-wallet"></i>
+                                <span class="side-menu__label">Finansal Yönetim</span>
+                                <i class="ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                                <li class="slide">
+                                    <a href="/expenses" class="side-menu__item {{ request()->is('expenses*') ? 'active' : '' }}">Giderler</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="/shifts" class="side-menu__item {{ request()->is('shifts*') ? 'active' : '' }}">Kasa Vardiyaları</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="/payments" class="side-menu__item {{ request()->is('payments*') ? 'active' : '' }}">Ödemeler</a>
+                                </li>
+                            </ul>
+                        </li>
+                    @endif
 
-                    <li class="slide">
-                        <a href="/users" class="side-menu__item">
-                            <i class="side-menu__icon ti ti-users"></i>
-                            <span class="side-menu__label">Personel</span>
-                        </a>
-                    </li>
+                    <!-- Personel ve Sistem Ayarları -->
+                    @if($role === 'admin')
+                        <li class="slide">
+                            <a href="/users" class="side-menu__item {{ request()->is('users*') ? 'active' : '' }}">
+                                <i class="side-menu__icon ti ti-users"></i>
+                                <span class="side-menu__label">Personel</span>
+                            </a>
+                        </li>
 
-                    <!-- Kategori: Sistem -->
-                    <li class="slide__category"><span class="category-name">Sistem</span></li>
-                    <li class="slide has-sub">
-                        <a href="javascript:void(0);" class="side-menu__item">
-                            <i class="side-menu__icon ti ti-settings"></i>
-                            <span class="side-menu__label">Ayarlar</span>
-                            <i class="ri-arrow-right-s-line side-menu__angle"></i>
-                        </a>
-                        <ul class="slide-menu child1">
-                            <li class="slide"><a href="/settings" class="side-menu__item">Genel Ayarlar</a></li>
-                            <li class="slide"><a href="/printers" class="side-menu__item">Yazıcılar</a></li>
-                        </ul>
-                    </li>
+                        <li class="slide__category"><span class="category-name">Sistem</span></li>
+
+                        <!-- AYARLAR (Parent: settings*, printers*) -->
+                        <li class="slide has-sub {{ request()->is('settings*', 'printers*') ? 'active open' : '' }}">
+                            <a href="javascript:void(0);" class="side-menu__item {{ request()->is('settings*', 'printers*') ? 'active' : '' }}">
+                                <i class="side-menu__icon ti ti-settings"></i>
+                                <span class="side-menu__label">Ayarlar</span>
+                                <i class="ri-arrow-right-s-line side-menu__angle"></i>
+                            </a>
+                            <ul class="slide-menu child1">
+                                <li class="slide">
+                                    <a href="/settings" class="side-menu__item {{ request()->is('settings*') ? 'active' : '' }}">Genel Ayarlar</a>
+                                </li>
+                                <li class="slide">
+                                    <a href="/printers" class="side-menu__item {{ request()->is('printers*') ? 'active' : '' }}">Yazıcılar</a>
+                                </li>
+                            </ul>
+                        </li>
+                    @endif
 
                 </ul>
                 <div class="slide-right" id="slide-right"><svg xmlns="http://www.w3.org/2000/svg" fill="#7b8191" width="24" height="24" viewBox="0 0 24 24"><path d="M10.707 17.707 16.414 12l-5.707-5.707-1.414 1.414L13.586 12l-4.293 4.293z"></path></svg></div>
             </nav>
         </div>
     </aside>
+    <!-- End::app-sidebar -->
     <!-- End::app-sidebar -->
     <!-- End::app-sidebar -->
 
