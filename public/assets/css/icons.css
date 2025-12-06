@@ -39429,13 +39429,14 @@
   content: "\ef0b";
 }
 
-/* src/assets/scss/icons.scss */
-/*!
- * Bootstrap Icons v1.11.1 (https://icons.getbootstrap.com/)
- * Copyright 2019-2023 The Bootstrap Authors
- * Licensed under MIT (https://github.com/twbs/icons/blob/main/LICENSE)
- */
-/*!
- * Tabler Icons 2.11.0 by tabler - https://tabler.io
- * License - https://github.com/tabler/tabler-icons/blob/master/LICENSE
- */
+.app-sidebar .side-menu__item .side-menu__icon {
+    font-size: 20px !important;    /* SVG'nin görsel boyutu */
+    width: 20px !important;        /* Genişlik sabitleme */
+    height: 20px !important;       /* Yükseklik sabitleme */
+    line-height: 20px !important;  /* Dikey ortalama */
+    display: inline-flex !important;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    vertical-align: middle;
+}

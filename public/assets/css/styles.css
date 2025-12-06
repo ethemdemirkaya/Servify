@@ -22505,6 +22505,7 @@ ul.sub-tasks-list li:last-child {
   line-height: 1.75rem;
   font-size: 0.65rem;
 }
+
 .avatar.avatar-sm .avatar-badge {
   padding: 0.3rem;
   width: 1.1rem;
@@ -22522,6 +22523,34 @@ ul.sub-tasks-list li:last-child {
 .avatar.avatar-sm svg {
   width: 1rem;
   height: 1rem;
+}
+/* İsim: avatar-ms (Medium-Small / Ara Boy) */
+.avatar.avatar-ms {
+    width: 2rem;       /* 1.75rem ile 2.25rem arası */
+    height: 2rem;
+    line-height: 2rem;
+    font-size: 0.75rem;
+}
+
+.avatar.avatar-ms .avatar-badge {
+    padding: 0.35rem;
+    width: 1.25rem;    /* Orantılı büyütüldü */
+    height: 1.25rem;
+    line-height: 1.25rem;
+    font-size: 0.6rem;
+    inset-block-start: -35%;     /* Konum ortalandı */
+    inset-inline-end: -0.55rem;
+}
+
+.avatar.avatar-ms.online:before,
+.avatar.avatar-ms.offline:before {
+    width: 0.55rem;    /* Nokta boyutu biraz büyüdü */
+    height: 0.55rem;
+}
+
+.avatar.avatar-ms svg {
+    width: 1.15rem;    /* İkon boyutu ortalandı */
+    height: 1.15rem;
 }
 .avatar.avatar-md {
   width: 2.5rem;

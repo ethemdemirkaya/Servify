@@ -45,4 +45,23 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+    public function getInitialsAttribute()
+    {
+        $name = trim($this->name);
+        $words = explode(' ', $name);
+        $initials = '';
+
+        if (count($words) > 0) {
+            // İlk kelimenin baş harfi
+            $initials .= mb_substr($words[0], 0, 1, 'UTF-8');
+
+            // Eğer birden fazla kelime varsa, en son kelimenin baş harfini de al
+            if (count($words) > 1) {
+                $initials .= mb_substr(end($words), 0, 1, 'UTF-8');
+            }
+        }
+
+        // Hepsini büyük harfe çevir
+        return mb_strtoupper($initials, 'UTF-8');
+    }
 }

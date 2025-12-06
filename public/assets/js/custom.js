@@ -83,88 +83,89 @@
   const themeContainerBackground = document.querySelector(
     ".theme-container-background"
   );
+    if (pickrContainerPrimary && themeContainerPrimary && pickrContainerBackground && themeContainerBackground) {
+        /* for theme primary */
+        const nanoThemes = [
+            [
+                "nano",
+                {
+                    defaultRepresentation: "RGB",
+                    components: {
+                        preview: true,
+                        opacity: false,
+                        hue: true,
 
-  /* for theme primary */
-  const nanoThemes = [
-    [
-      "nano",
-      {
-        defaultRepresentation: "RGB",
-        components: {
-          preview: true,
-          opacity: false,
-          hue: true,
+                        interaction: {
+                            hex: false,
+                            rgba: true,
+                            hsva: false,
+                            input: true,
+                            clear: false,
+                            save: false,
+                        },
+                    },
+                },
+            ],
+        ];
+        const nanoButtons = [];
+        let nanoPickr = null;
+        for (const [theme, config] of nanoThemes) {
+            const button = document.createElement("button");
+            button.innerHTML = theme;
+            nanoButtons.push(button);
 
-          interaction: {
-            hex: false,
-            rgba: true,
-            hsva: false,
-            input: true,
-            clear: false,
-            save: false,
-          },
-        },
-      },
-    ],
-  ];
-  const nanoButtons = [];
-  let nanoPickr = null;
-  for (const [theme, config] of nanoThemes) {
-    const button = document.createElement("button");
-    button.innerHTML = theme;
-    nanoButtons.push(button);
+            button.addEventListener("click", () => {
+                const el = document.createElement("p");
+                pickrContainerPrimary.appendChild(el);
 
-    button.addEventListener("click", () => {
-      const el = document.createElement("p");
-      pickrContainerPrimary.appendChild(el);
+                /* Delete previous instance */
+                if (nanoPickr) {
+                    nanoPickr.destroyAndRemove();
+                }
 
-      /* Delete previous instance */
-      if (nanoPickr) {
-        nanoPickr.destroyAndRemove();
-      }
+                /* Apply active class */
+                for (const btn of nanoButtons) {
+                    btn.classList[btn === button ? "add" : "remove"]("active");
+                }
 
-      /* Apply active class */
-      for (const btn of nanoButtons) {
-        btn.classList[btn === button ? "add" : "remove"]("active");
-      }
+                /* Create fresh instance */
+                nanoPickr = new Pickr(
+                    Object.assign(
+                        {
+                            el,
+                            theme,
+                            default: "#985ffd",
+                        },
+                        config
+                    )
+                );
 
-      /* Create fresh instance */
-      nanoPickr = new Pickr(
-        Object.assign(
-          {
-            el,
-            theme,
-            default: "#985ffd",
-          },
-          config
-        )
-      );
+                /* Set events */
+                nanoPickr.on("changestop", (source, instance) => {
+                    let color = instance.getColor().toRGBA();
+                    let html = document.querySelector("html");
+                    html.style.setProperty(
+                        "--primary-rgb",
+                        `${Math.floor(color[0])}, ${Math.floor(color[1])}, ${Math.floor(
+                            color[2]
+                        )}`
+                    );
+                    /* theme color picker */
+                    localStorage.setItem(
+                        "primaryRGB",
+                        `${Math.floor(color[0])}, ${Math.floor(color[1])}, ${Math.floor(
+                            color[2]
+                        )}`
+                    );
+                    // updateColors();
+                });
+            });
 
-      /* Set events */
-      nanoPickr.on("changestop", (source, instance) => {
-        let color = instance.getColor().toRGBA();
-        let html = document.querySelector("html");
-        html.style.setProperty(
-          "--primary-rgb",
-          `${Math.floor(color[0])}, ${Math.floor(color[1])}, ${Math.floor(
-            color[2]
-          )}`
-        );
-        /* theme color picker */
-        localStorage.setItem(
-          "primaryRGB",
-          `${Math.floor(color[0])}, ${Math.floor(color[1])}, ${Math.floor(
-            color[2]
-          )}`
-        );
-        // updateColors();
-      });
-    });
-
-    themeContainerPrimary.appendChild(button);
-  }
-  nanoButtons[0].click();
-  /* for theme primary */
+            themeContainerPrimary.appendChild(button);
+        }
+        nanoButtons[0].click();
+        /* for theme primary */
+    }
 
   /* for theme background */
   const nanoThemes1 = [
@@ -550,43 +551,50 @@
 })();
 
 /* full screen */
-var elem = document.documentElement;
+/* full screen */
 function openFullscreen() {
-  let open = document.querySelector(".full-screen-open");
-  let close = document.querySelector(".full-screen-close");
+    var elem = document.documentElement; // İçeri taşıdık
+    let open = document.querySelector(".full-screen-open");
+    let close = document.querySelector(".full-screen-close");
 
-  if (
-    !document.fullscreenElement &&
-    !document.webkitFullscreenElement &&
-    !document.msFullscreenElement
-  ) {
-    if (elem.requestFullscreen) {
-      elem.requestFullscreen();
-    } else if (elem.webkitRequestFullscreen) {
-      /* Safari */
-      elem.webkitRequestFullscreen();
-    } else if (elem.msRequestFullscreen) {
-      /* IE11 */
-      elem.msRequestFullscreen();
+    if (
+        !document.fullscreenElement &&
+        !document.webkitFullscreenElement &&
+        !document.msFullscreenElement
+    ) {
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+        // İkonları değiştir
+        if(close) {
+            close.classList.add("d-block");
+            close.classList.remove("d-none");
+        }
+        if(open) {
+            open.classList.add("d-none");
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+            document.msExitFullscreen();
+        }
+        // İkonları geri al
+        if(close) {
+            close.classList.remove("d-block");
+            close.classList.add("d-none");
+        }
+        if(open) {
+            open.classList.remove("d-none");
+            open.classList.add("d-block");
+        }
     }
-    close.classList.add("d-block");
-    close.classList.remove("d-none");
-    open.classList.add("d-none");
-  } else {
-    if (document.exitFullscreen) {
-      document.exitFullscreen();
-    } else if (document.webkitExitFullscreen) {
-      /* Safari */
-      document.webkitExitFullscreen();
-    } else if (document.msExitFullscreen) {
-      /* IE11 */
-      document.msExitFullscreen();
-    }
-    close.classList.remove("d-block");
-    open.classList.remove("d-none");
-    close.classList.add("d-none");
-    open.classList.add("d-block");
-  }
 }
 /* full screen */
 
@@ -612,12 +620,12 @@ headerbtn.forEach((button) => {
     cartCount = document.querySelectorAll(".dropdown-item-close").length;
     if (cartDataEl) {
         cartDataEl.innerText = `${cartCount}`;
-    } 
+    }
     if (cartBadgeEl) {
       cartBadgeEl.innerText = `${cartCount}`;
     }
     console.log(cartCount);
-    
+
     if (cartCount == 0) {
       let elementHide = document.querySelector(".empty-header-item");
       let elementShow = document.querySelector(".empty-item");
@@ -627,7 +635,7 @@ headerbtn.forEach((button) => {
       if (elementShow) {
         elementShow.classList.remove("d-none");
       }
-    } 
+    }
   });
 });
 /* for cart dropdown */
@@ -660,4 +668,41 @@ productPlusBtn.forEach((button) => {
     }
   };
 });
-// Cart quantity settings
+document.addEventListener("DOMContentLoaded", function() {
+    // Header'daki Ay/Güneş butonunu seç
+    let layoutSetting = document.querySelector(".layout-setting");
+    let html = document.querySelector("html");
+
+    if (layoutSetting) {
+        layoutSetting.addEventListener("click", () => {
+            let currentTheme = html.getAttribute('data-theme-mode');
+
+            if (currentTheme === "dark") {
+                // --- DARK -> LIGHT GEÇİŞİ ---
+                html.setAttribute('data-theme-mode', 'light');
+                html.setAttribute('data-header-styles', 'transparent');
+                html.setAttribute('data-menu-styles', 'transparent');
+
+                // LocalStorage Temizliği
+                localStorage.removeItem("vyzordarktheme");
+                localStorage.removeItem("bodyBgRGB");
+                localStorage.removeItem("bodylightRGB");
+
+                // İkonları vs. resetle
+                if(!localStorage.getItem('primaryRGB')){
+                    html.setAttribute('style','');
+                }
+
+            } else {
+                // --- LIGHT -> DARK GEÇİŞİ ---
+                html.setAttribute('data-theme-mode', 'dark');
+                html.setAttribute('data-header-styles', 'dark');
+                html.setAttribute('data-menu-styles', 'dark');
+
+                // LocalStorage Kaydı
+                localStorage.setItem("vyzordarktheme", true);
+                localStorage.removeItem("vyzorlighttheme");
+            }
+        });
+    }
+});

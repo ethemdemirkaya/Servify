@@ -10,9 +10,9 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
 
-    /*Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');*/
+    Route::get('/dashboard', function () {
+        return view('dashboard.index');
+    })->name('dashboard');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
