@@ -4,26 +4,21 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
-use App\Models\Product;
 use App\Models\DiningTable;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 
 class PosController extends Controller
 {
     public function index()
     {
-        // Kategorileri ürünleriyle beraber çek (Eğer hiç kategori yoksa boş collection döner, null değil)
         $categories = Category::with(['products' => function($q) {
             $q->where('is_active', true);
-        }])->get();
+        }, 'products.variations'])->get();
 
-        // Masaları çek
         $tables = DiningTable::all();
-
-        // Son siparişleri çek (Eğer hiç sipariş yoksa boş collection döner)
         $recentOrders = Order::with('user')->latest()->take(10)->get();
 
         return view('pos.index', compact('categories', 'tables', 'recentOrders'));
@@ -31,87 +26,144 @@ class PosController extends Controller
 
     public function store(Request $request)
     {
-        // EĞER SİPARİŞ ID VARSA (GÜNCELLEME / ÖDEME ALMA)
+        // 1. SİPARİŞ BAŞLIĞINI OLUŞTUR VEYA BUL
         if ($request->order_id) {
             $order = Order::find($request->order_id);
-        }
-        // SİPARİŞ ID YOKSA (YENİ SİPARİŞ)
-        else {
+        } else {
             $order = new Order();
             $order->dining_table_id = $request->dining_table_id;
             $order->user_id = auth()->id();
             $order->status = 'pending';
         }
 
-        // Ortak Alanlar
         $order->customer_name = $request->customer_name;
 
-        // Ödeme alındıysa durumu güncelle
+        // Sipariş Durumu Mantığı
         if ($request->payment_method != 'pending') {
             $order->payment_status = 'paid';
-            $order->status = 'completed'; // Siparişi kapat
-
-            // MASAYI BOŞALT
+            $order->status = 'completed';
             if ($order->dining_table_id) {
-                $table = DiningTable::find($order->dining_table_id);
-                $table->status = 'empty';
-                $table->save();
+                DiningTable::where('id', $order->dining_table_id)->update(['status' => 'empty']);
             }
         } else {
-            // Sadece mutfağa gönderildiyse
             if ($order->dining_table_id) {
-                $table = DiningTable::find($order->dining_table_id);
-                $table->status = 'occupied'; // Masayı dolu yap
-                $table->save();
+                DiningTable::where('id', $order->dining_table_id)->update(['status' => 'occupied']);
             }
         }
-
         $order->save();
 
-        // --- Order Items Kayıt İşlemleri (Eski ürünleri silip yenilerini ekleyebilir veya güncelleyebilirsin) ---
-        // Basit yöntem: Eski kalemleri sil, sepettekileri yeniden ekle (Güncelleme mantığı için)
-        if($request->order_id) {
-            OrderItem::where('order_id', $order->id)->delete();
-        }
+        // 2. AKILLI SENKRONİZASYON (SİLMEK YERİNE GÜNCELLEME)
 
+        // Gelen sepet kalemlerinin ID'lerini topla (Eğer var olan bir kalemse ID'si vardır)
+        $incomingItemIds = [];
         $totalAmount = 0;
+
         foreach ($request->cart as $item) {
+            // Eğer 'order_item_id' varsa güncelle, yoksa yeni oluştur
+            if (isset($item['order_item_id']) && $item['order_item_id']) {
+                $orderItem = OrderItem::find($item['order_item_id']);
+
+                // Sadece miktar veya fiyat değişmiş olabilir, statüsü (waiting/cooking) KORUNMALI
+                if ($orderItem) {
+                    $orderItem->quantity = $item['quantity'];
+                    $orderItem->sub_total = $item['price'] * $item['quantity'];
+                    $orderItem->save();
+                    $incomingItemIds[] = $orderItem->id;
+                    $totalAmount += $orderItem->sub_total;
+                    continue; // Döngünün başına dön, varyasyonları elleme (basitlik için)
+                }
+            }
+
+            // Yeni Kalem Ekleme
             $orderItem = new OrderItem();
             $orderItem->order_id = $order->id;
             $orderItem->product_id = $item['id'];
             $orderItem->quantity = $item['quantity'];
             $orderItem->unit_price = $item['price'];
             $orderItem->sub_total = $item['price'] * $item['quantity'];
+            $orderItem->status = 'waiting'; // Yeni ürün mutfağa 'bekliyor' olarak düşer
             $orderItem->save();
 
+            $incomingItemIds[] = $orderItem->id;
             $totalAmount += $orderItem->sub_total;
+
+            // Varyasyonları Kaydet (Sadece yeni ürünler için)
+            if (isset($item['variations']) && is_array($item['variations'])) {
+                foreach ($item['variations'] as $var) {
+                    DB::table('order_item_variations')->insert([
+                        'order_item_id' => $orderItem->id,
+                        'product_variation_id' => $var['id'],
+                        'variation_name' => $var['name'],
+                        'price' => $var['price'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            }
         }
 
+        // 3. SEPETTEN SİLİNENLERİ VERİTABANINDAN DA SİL
+        // (Eğer sipariş ID varsa ve gelen listede olmayan eski kayıtlar varsa sil)
+        if ($request->order_id) {
+            // Not: Mutfakta "hazırlanıyor" veya "hazır" olanları silmeyi engelleyebilirsiniz.
+            // Şimdilik sadece listede olmayanları siliyoruz.
+            OrderItem::where('order_id', $order->id)
+                ->whereNotIn('id', $incomingItemIds)
+                ->delete();
+        }
+
+        // Toplam tutarı güncelle
         $order->total_amount = $totalAmount;
         $order->save();
 
+        // 4. ÖDEME KAYDI (Varsa)
+        if ($request->payment_method != 'pending') {
+            $existingPayment = Payment::where('order_id', $order->id)->first();
+            if (!$existingPayment) {
+                Payment::create([
+                    'order_id'       => $order->id,
+                    'amount'         => $totalAmount,
+                    'payment_method' => $request->payment_method,
+                ]);
+            }
+        }
+
         return response()->json(['success' => true, 'message' => 'İşlem Başarılı']);
     }
-    // PosController.php içine ekle
 
     public function getTableOrder($tableId)
     {
-        // Masaya ait, ödenmemiş (unpaid) siparişi bul
         $order = Order::where('dining_table_id', $tableId)
-            ->where('payment_status', 'unpaid') // Önemli: Sadece ödenmemişleri getir
-            ->where('status', '!=', 'completed') // Tamamlanmamışları getir
-            ->where('status', '!=', 'cancelled') // İptal edilmemişleri getir
-            ->with('orderItems.product')
+            ->where('payment_status', 'unpaid')
+            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->with(['orderItems.product', 'orderItems.variations'])
             ->first();
 
         if ($order) {
             $formattedCart = $order->orderItems->map(function($item) {
+                $loadedVariations = $item->variations->map(function($v) {
+                    return [
+                        'id' => $v->product_variation_id,
+                        'name' => $v->variation_name,
+                        'price' => (float)$v->price
+                    ];
+                })->toArray();
+
+                $varIds = array_column($loadedVariations, 'id');
+                sort($varIds);
+                $uniqueId = $item->product_id . ($varIds ? '_' . implode('_', $varIds) : '');
+
                 return [
                     'id' => $item->product_id,
-                    'name' => $item->product ? $item->product->name : 'Silinmiş Ürün', // Ürün silindiyse hata vermesin
+                    'order_item_id' => $item->id, // <--- KRİTİK: DB ID'sini Frontend'e gönderiyoruz
+                    'unique_id' => $uniqueId,
+                    'name' => $item->product ? $item->product->name : 'Silinmiş Ürün',
                     'price' => (float)$item->unit_price,
+                    'base_price' => (float)($item->product->price ?? 0),
                     'image' => asset($item->product->image ?? 'assets/images/ecommerce/png/1.png'),
-                    'quantity' => $item->quantity
+                    'quantity' => $item->quantity,
+                    'status' => $item->status, // <--- Mutfak durumunu da gönderiyoruz
+                    'variations' => $loadedVariations
                 ];
             });
 
@@ -123,6 +175,6 @@ class PosController extends Controller
             ]);
         }
 
-        return response()->json(['success' => false, 'message' => 'Bu masada aktif bir sipariş bulunamadı.']);
+        return response()->json(['success' => false, 'message' => 'Masada aktif sipariş yok.']);
     }
 }

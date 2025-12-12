@@ -34,11 +34,9 @@ class OrderItem extends Model
      * Veritabanı tablosu: order_item_variations
      * Foreign Key: order_item_id
      */
-    public function variations()
-    {
-        return $this->hasMany(OrderItemVariation::class, 'order_item_id');
+    public function variations() {
+        return $this->hasMany(\App\Models\OrderItemVariation::class, 'order_item_id');
     }
-
     /**
      * Hangi siparişe ait?
      */

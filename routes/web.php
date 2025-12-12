@@ -8,6 +8,7 @@ use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReservationController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
@@ -56,6 +57,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingsController::class, 'update'])->name('settings.update');
+    Route::get('/orders/history', [App\Http\Controllers\OrderController::class, 'history'])->name('orders.history');
+
+    Route::resource('payments', \App\Http\Controllers\PaymentController::class)->only(['index', 'store', 'destroy']);
+    Route::resource('expenses', \App\Http\Controllers\ExpenseController::class)->only(['index', 'store', 'destroy']);
+
+    Route::resource('shifts', \App\Http\Controllers\ShiftController::class)->only(['index', 'store', 'update']);
+    Route::resource('printers', \App\Http\Controllers\PrinterController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::get('printers/{id}/test', [\App\Http\Controllers\PrinterController::class, 'testConnection'])->name('printers.test');
+
+
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 

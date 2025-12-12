@@ -174,7 +174,7 @@
                         <div class="dropdown-divider"></div>
                         <ul class="list-unstyled mb-0">
                             <li>
-                                <a class="dropdown-item d-flex align-items-center" href="#"><i class="ti ti-user-circle me-2 fs-18"></i>Profili Görüntüle</a>
+                                <a class="dropdown-item d-flex align-items-center" href="{{route('profile.edit')}}"><i class="ti ti-user-circle me-2 fs-18"></i>Profili Görüntüle</a>
                             </li>
                             <li>
                                 <!-- Çıkış İşlemi -->
@@ -185,6 +185,7 @@
                                 <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                     @csrf
                                 </form>
+                            </li>
                             </li>
                         </ul>
                     </div>

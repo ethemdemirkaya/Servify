@@ -4,12 +4,6 @@
 @push('styles')
     <!-- Grid.js CSS -->
     <link rel="stylesheet" href="{{ asset('assets/libs/gridjs/theme/mermaid.min.css') }}">
-    <style>
-        .hover-lift { transition: transform 0.3s ease; }
-        .hover-lift:hover { transform: translateY(-5px); }
-        .spin { animation: spin 1s infinite linear; }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-    </style>
 @endpush
 
 @section('content')
